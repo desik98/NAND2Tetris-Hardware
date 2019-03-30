@@ -1,0 +1,68 @@
+// This file is part of www.nand2tetris.org	
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM64.hdl
+
+/**
+ * Memory of 64 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
+
+    PARTS:
+    Not(in = address[3], out = notAddress0);
+    Not(in = address[4], out = notAddress1);
+    Not(in = address[5], out = notAddress2);
+
+    // 0 0 0
+    And(a = notAddress0, b = notAddress1, out = notAddress0AndNotAddress1);
+    And(a = notAddress0AndNotAddress1, b = notAddress2, out = notAddress0AndNotAddress1AndNotAddress2);
+    And(a = notAddress0AndNotAddress1AndNotAddress2, b = load, out = notAddress0AndNotAddress1AndNotAddress2AndLoad);
+
+    // 0 0 1
+	And(a = address[3], b = notAddress1, out = address0AndNotAddress1);
+	And(a = address0AndNotAddress1, b = notAddress2, out = address0AndNotAddress1AndNotAddress2);
+	And(a = address0AndNotAddress1AndNotAddress2, b = load, out = address0AndNotAddress1AndNotAddress2AndLoad);
+
+	// 0 1 0
+	And(a = notAddress0, b = address[4], out = notAddress0AndAddress1);
+	And(a = notAddress0AndAddress1, b = notAddress2, out = notAddress0AndAddress1AndNotAddress2);
+	And(a = notAddress0AndAddress1AndNotAddress2, b = load, out = notAddress0AndAddress1AndNotAddress2AndLoad);
+	
+	// 0 1 1
+	And(a = address[3], b = address[4], out = address0AndAddress1);
+	And(a = address0AndAddress1, b = notAddress2, out = address0AndAddress1AndNotAddress2);
+	And(a = address0AndAddress1AndNotAddress2, b = load, out = address0AndAddress1AndNotAddress2AndLoad);
+	
+	// 1 0 0
+	And(a = notAddress0AndNotAddress1, b = address[5], out = notAddress0AndNotAddress1AndAddress2);
+	And(a = notAddress0AndNotAddress1AndAddress2, b = load, out = notAddress0AndNotAddress1AndAddress2AndLoad);
+
+	// 1 0 1
+	And(a = address0AndNotAddress1, b = address[5], out = address0AndNotAddress1AndAddress2);
+	And(a = address0AndNotAddress1AndAddress2, b = load, out = address0AndNotAddress1AndAddress2AndLoad);
+
+	// 1 1 0
+	And(a = notAddress0AndAddress1, b = address[5], out = notAddress0AndAddress1AndAddress2);
+	And(a = notAddress0AndAddress1AndAddress2, b = load, out = notAddress0AndAddress1AndAddress2AndLoad);
+
+	// 1 1 1
+	And(a = address0AndAddress1, b = address[5], out = address0AndAddress1AndAddress2);
+	And(a = address0AndAddress1AndAddress2, b = load, out = address0AndAddress1AndAddress2AndLoad);
+
+	RAM8(in[0..15] = in, load = notAddress0AndNotAddress1AndNotAddress2AndLoad, address = address[0..2], out = out0);
+	RAM8(in[0..15] = in, load = address0AndNotAddress1AndNotAddress2AndLoad, address = address[0..2], out = out1);
+	RAM8(in[0..15] = in, load = notAddress0AndAddress1AndNotAddress2AndLoad, address = address[0..2], out = out2);
+	RAM8(in[0..15] = in, load = address0AndAddress1AndNotAddress2AndLoad, address = address[0..2], out = out3);
+	RAM8(in[0..15] = in, load = notAddress0AndNotAddress1AndAddress2AndLoad, address = address[0..2], out = out4);
+	RAM8(in[0..15] = in, load = address0AndNotAddress1AndAddress2AndLoad, address = address[0..2], out = out5);
+	RAM8(in[0..15] = in, load = notAddress0AndAddress1AndAddress2AndLoad, address = address[0..2], out = out6);
+	RAM8(in[0..15] = in, load = address0AndAddress1AndAddress2AndLoad, address = address[0..2], out = out7);
+	
+	Mux8Way16(a = out0, b = out1, c = out2, d = out3, e = out4, f = out5, g = out6, h = out7, sel = address[3..5], out = out);
+}
